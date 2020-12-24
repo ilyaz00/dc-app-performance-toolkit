@@ -1585,7 +1585,11 @@ vars.put(&quot;p_request_body&quot;, request_body.toString())
                   <collectionProp name="Arguments.arguments">
                     <elementProp name="" elementType="HTTPArgument">
                       <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                      <stringProp name="Argument.value">{&quot;settings&quot;:[{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10000&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]}]}</stringProp>
+                      <stringProp name="Argument.value">{&quot;settings&quot;:[{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10000&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
+{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10334&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
+{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10000&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
+{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10001&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
+{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10332&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]}]}</stringProp>
                       <stringProp name="Argument.metadata">=</stringProp>
                     </elementProp>
                   </collectionProp>
