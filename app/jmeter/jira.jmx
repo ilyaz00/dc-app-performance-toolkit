@@ -16,22 +16,22 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="application.hostname" elementType="Argument">
             <stringProp name="Argument.name">application.hostname</stringProp>
-            <stringProp name="Argument.value">${__lowercase(${__P(application_hostname, your_jira_instance)})}</stringProp>
+            <stringProp name="Argument.value">localhost</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="ajira_prepare_datapplication.port" elementType="Argument">
-            <stringProp name="Argument.name">ajira_prepare_datapplication.port</stringProp>
-            <stringProp name="Argument.value">${__P(application_port, 80)}</stringProp>
+          <elementProp name="application.port" elementType="Argument">
+            <stringProp name="Argument.name">application.port</stringProp>
+            <stringProp name="Argument.value">2990</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="application.protocol" elementType="Argument">
             <stringProp name="Argument.name">application.protocol</stringProp>
-            <stringProp name="Argument.value">${__P(application_protocol, http)}</stringProp>
+            <stringProp name="Argument.value">http</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="application.postfix" elementType="Argument">
             <stringProp name="Argument.name">application.postfix</stringProp>
-            <stringProp name="Argument.value">${__P(application_postfix, )}</stringProp>
+            <stringProp name="Argument.value">jira</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>
@@ -104,7 +104,7 @@
         <stringProp name="filename"></stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="false">
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -141,7 +141,7 @@
       </ResultCollector>
       <hashTree/>
       <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setUp Thread Group" enabled="true">
-        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <stringProp name="ThreadGroup.on_sample_error">stoptestnow</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <stringProp name="LoopController.loops">1</stringProp>
@@ -167,12 +167,364 @@
             <stringProp name="script">import org.apache.commons.io.FileUtils;
 
 // TODO Rework hard-codded path
-int projects = FileUtils.readLines(new File(&quot;datasets/jira/projects.csv&quot;)).size();
+int projects = FileUtils.readLines(new File(&quot;${__BeanShell(import org.apache.jmeter.services.FileServer; FileServer.getFileServer().getBaseDir();)}/datasets/jira/projects.csv&quot;)).size();
 int page_size = 25;
 int pages = (projects % page_size == 0) ? projects / page_size : projects / page_size + 1;
-props.put(&quot;project_pages&quot;, String.valueOf(pages));</stringProp>
+props.put(&quot;project_pages&quot;, String.valueOf(pages));
+props.put(&quot;projects_num&quot;, String.valueOf(projects));</stringProp>
           </BeanShellPreProcessor>
           <hashTree/>
+        </hashTree>
+      </hashTree>
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Apps Config Thread Group" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">stoptestnow</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${__P(projects_num, 0)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(projects_num, 0)}/100</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </SetupThreadGroup>
+      <hashTree>
+        <com.blazemeter.jmeter.RandomCSVDataSetConfig guiclass="com.blazemeter.jmeter.RandomCSVDataSetConfigGui" testclass="com.blazemeter.jmeter.RandomCSVDataSetConfig" testname="projects" enabled="true">
+          <stringProp name="filename">datasets/jira/projects.csv</stringProp>
+          <stringProp name="fileEncoding">UTF-8</stringProp>
+          <stringProp name="delimiter">,</stringProp>
+          <stringProp name="variableNames">project_key,project_id</stringProp>
+          <boolProp name="randomOrder">false</boolProp>
+          <boolProp name="ignoreFirstLine">false</boolProp>
+          <boolProp name="rewindOnTheEndOfList">false</boolProp>
+          <boolProp name="independentListPerThread">false</boolProp>
+        </com.blazemeter.jmeter.RandomCSVDataSetConfig>
+        <hashTree/>
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="editing_rules_update_and_get_settings" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /rest/editingrules/1.0/settings/&lt;project_key&gt;" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&quot;settings&quot;:[{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10000&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
+{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10334&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
+{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10000&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
+{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10001&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
+{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10332&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]}]}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.domain"></stringProp>
+            <stringProp name="HTTPSampler.port"></stringProp>
+            <stringProp name="HTTPSampler.protocol"></stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${application.postfix}/rest/editingrules/1.0/settings/${project_key}</stringProp>
+            <stringProp name="HTTPSampler.method">PUT</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+            <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+            <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Accept-Language" elementType="Header">
+                  <stringProp name="Header.name">Accept-Language</stringProp>
+                  <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
+                </elementProp>
+                <elementProp name="X-Requested-With" elementType="Header">
+                  <stringProp name="Header.name">X-Requested-With</stringProp>
+                  <stringProp name="Header.value">XMLHttpRequest</stringProp>
+                </elementProp>
+                <elementProp name="Content-Type" elementType="Header">
+                  <stringProp name="Header.name">Content-Type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="Accept-Encoding" elementType="Header">
+                  <stringProp name="Header.name">Accept-Encoding</stringProp>
+                  <stringProp name="Header.value">gzip, deflate</stringProp>
+                </elementProp>
+                <elementProp name="Accept" elementType="Header">
+                  <stringProp name="Header.name">Accept</stringProp>
+                  <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
+                </elementProp>
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Basic YWRtaW46YWRtaW4=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /rest/editingrules/1.0/settings/&lt;project_key&gt;" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+              <collectionProp name="Arguments.arguments"/>
+            </elementProp>
+            <stringProp name="HTTPSampler.domain"></stringProp>
+            <stringProp name="HTTPSampler.port"></stringProp>
+            <stringProp name="HTTPSampler.protocol"></stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${application.postfix}/rest/editingrules/1.0/settings/${project_key}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+            <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+            <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Accept-Language" elementType="Header">
+                  <stringProp name="Header.name">Accept-Language</stringProp>
+                  <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
+                </elementProp>
+                <elementProp name="X-Requested-With" elementType="Header">
+                  <stringProp name="Header.name">X-Requested-With</stringProp>
+                  <stringProp name="Header.value">XMLHttpRequest</stringProp>
+                </elementProp>
+                <elementProp name="Content-Type" elementType="Header">
+                  <stringProp name="Header.name">Content-Type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="Accept-Encoding" elementType="Header">
+                  <stringProp name="Header.name">Accept-Encoding</stringProp>
+                  <stringProp name="Header.value">gzip, deflate</stringProp>
+                </elementProp>
+                <elementProp name="Accept" elementType="Header">
+                  <stringProp name="Header.name">Accept</stringProp>
+                  <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="link_fields_update_and_get_settings" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /rest/linkfields/1.0/settings/&lt;project_key&gt;" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&quot;settings&quot;:[{&quot;issueType&quot;:&quot;10000&quot;,&quot;fields&quot;:[&quot;creator&quot;],&quot;displayNames&quot;:true,&quot;removeSummary&quot;:true}]}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.domain"></stringProp>
+            <stringProp name="HTTPSampler.port"></stringProp>
+            <stringProp name="HTTPSampler.protocol"></stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${application.postfix}/rest/linkfields/1.0/settings/${project_key}</stringProp>
+            <stringProp name="HTTPSampler.method">PUT</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+            <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+            <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Accept-Language" elementType="Header">
+                  <stringProp name="Header.name">Accept-Language</stringProp>
+                  <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
+                </elementProp>
+                <elementProp name="X-Requested-With" elementType="Header">
+                  <stringProp name="Header.name">X-Requested-With</stringProp>
+                  <stringProp name="Header.value">XMLHttpRequest</stringProp>
+                </elementProp>
+                <elementProp name="Content-Type" elementType="Header">
+                  <stringProp name="Header.name">Content-Type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="Accept-Encoding" elementType="Header">
+                  <stringProp name="Header.name">Accept-Encoding</stringProp>
+                  <stringProp name="Header.value">gzip, deflate</stringProp>
+                </elementProp>
+                <elementProp name="Accept" elementType="Header">
+                  <stringProp name="Header.name">Accept</stringProp>
+                  <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
+                </elementProp>
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Basic YWRtaW46YWRtaW4=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /rest/linkfields/1.0/settings/&lt;project_key&gt;" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+              <collectionProp name="Arguments.arguments"/>
+            </elementProp>
+            <stringProp name="HTTPSampler.domain"></stringProp>
+            <stringProp name="HTTPSampler.port"></stringProp>
+            <stringProp name="HTTPSampler.protocol"></stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${application.postfix}/rest/linkfields/1.0/settings/${project_key}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+            <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+            <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Accept-Language" elementType="Header">
+                  <stringProp name="Header.name">Accept-Language</stringProp>
+                  <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
+                </elementProp>
+                <elementProp name="X-Requested-With" elementType="Header">
+                  <stringProp name="Header.name">X-Requested-With</stringProp>
+                  <stringProp name="Header.value">XMLHttpRequest</stringProp>
+                </elementProp>
+                <elementProp name="Content-Type" elementType="Header">
+                  <stringProp name="Header.name">Content-Type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="Accept-Encoding" elementType="Header">
+                  <stringProp name="Header.name">Accept-Encoding</stringProp>
+                  <stringProp name="Header.value">gzip, deflate</stringProp>
+                </elementProp>
+                <elementProp name="Accept" elementType="Header">
+                  <stringProp name="Header.name">Accept</stringProp>
+                  <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="unilistener_update_and_get_settings" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /rest/unilistener/1.0/settings/&lt;project_key&gt;" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&quot;settings&quot;:[{&quot;issuetype&quot;:&quot;all&quot;,&quot;performactionsaspl&quot;:false,&quot;dispatchevent&quot;:false,&quot;conditions&quot;:[{&quot;conditiontype&quot;:&quot;IssueEvent&quot;,&quot;parameter1&quot;:&quot;1&quot;,&quot;parameter2&quot;:&quot;N/A&quot;,&quot;parameter3&quot;:&quot;N/A&quot;,&quot;parameter4&quot;:&quot;N/A&quot;,&quot;logic&quot;:&quot;N/A&quot;,&quot;isOn&quot;:false}],&quot;actions&quot;:[{&quot;actiontype&quot;:&quot;CommentIssue&quot;,&quot;parameter1&quot;:&quot;Issue created&quot;,&quot;parameter2&quot;:&quot;N/A&quot;,&quot;parameter3&quot;:&quot;N/A&quot;,&quot;parameter4&quot;:&quot;N/A&quot;,&quot;parameter5&quot;:&quot;N/A&quot;,&quot;parameter6&quot;:&quot;N/A&quot;}]}]}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.domain"></stringProp>
+            <stringProp name="HTTPSampler.port"></stringProp>
+            <stringProp name="HTTPSampler.protocol"></stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${application.postfix}/rest/unilistener/1.0/settings/${project_key}</stringProp>
+            <stringProp name="HTTPSampler.method">PUT</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+            <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+            <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Accept-Language" elementType="Header">
+                  <stringProp name="Header.name">Accept-Language</stringProp>
+                  <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
+                </elementProp>
+                <elementProp name="X-Requested-With" elementType="Header">
+                  <stringProp name="Header.name">X-Requested-With</stringProp>
+                  <stringProp name="Header.value">XMLHttpRequest</stringProp>
+                </elementProp>
+                <elementProp name="Content-Type" elementType="Header">
+                  <stringProp name="Header.name">Content-Type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="Accept-Encoding" elementType="Header">
+                  <stringProp name="Header.name">Accept-Encoding</stringProp>
+                  <stringProp name="Header.value">gzip, deflate</stringProp>
+                </elementProp>
+                <elementProp name="Accept" elementType="Header">
+                  <stringProp name="Header.name">Accept</stringProp>
+                  <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
+                </elementProp>
+                <elementProp name="" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Basic YWRtaW46YWRtaW4=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /rest/unilistener/1.0/settings/&lt;project_key&gt;" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+              <collectionProp name="Arguments.arguments"/>
+            </elementProp>
+            <stringProp name="HTTPSampler.domain"></stringProp>
+            <stringProp name="HTTPSampler.port"></stringProp>
+            <stringProp name="HTTPSampler.protocol"></stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${application.postfix}/rest/unilistener/1.0/settings/${project_key}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+            <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+            <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Accept-Language" elementType="Header">
+                  <stringProp name="Header.name">Accept-Language</stringProp>
+                  <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
+                </elementProp>
+                <elementProp name="X-Requested-With" elementType="Header">
+                  <stringProp name="Header.name">X-Requested-With</stringProp>
+                  <stringProp name="Header.value">XMLHttpRequest</stringProp>
+                </elementProp>
+                <elementProp name="Content-Type" elementType="Header">
+                  <stringProp name="Header.name">Content-Type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="Accept-Encoding" elementType="Header">
+                  <stringProp name="Header.name">Accept-Encoding</stringProp>
+                  <stringProp name="Header.value">gzip, deflate</stringProp>
+                </elementProp>
+                <elementProp name="Accept" elementType="Header">
+                  <stringProp name="Header.name">Accept</stringProp>
+                  <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
         </hashTree>
       </hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Jira" enabled="true">
@@ -275,421 +627,39 @@ props.put(&quot;project_pages&quot;, String.valueOf(pages));</stringProp>
               <stringProp name="Argument.value">${__P(perc_standalone_extension, 0)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
-            <elementProp name="perc_editing_rules" elementType="Argument">
-              <stringProp name="Argument.name">perc_editing_rules</stringProp>
-              <stringProp name="Argument.value">${__P(perc_editing_rules, 0)}</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-            <elementProp name="perc_link_fields" elementType="Argument">
-              <stringProp name="Argument.name">perc_link_fields</stringProp>
-              <stringProp name="Argument.value">${__P(perc_link_fields, 0)}</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-            <elementProp name="perc_universal_listener" elementType="Argument">
-              <stringProp name="Argument.name">perc_universal_listener</stringProp>
-              <stringProp name="Argument.value">${__P(perc_universal_listener, 0)}</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
             <elementProp name="perc_er_settings" elementType="Argument">
               <stringProp name="Argument.name">perc_er_settings</stringProp>
-              <stringProp name="Argument.value">${__P(perc_er_settings, 0)}</stringProp>
+              <stringProp name="Argument.value">${__P(perc_er_settings, 13)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="perc_lf_settings" elementType="Argument">
               <stringProp name="Argument.name">perc_lf_settings</stringProp>
-              <stringProp name="Argument.value">${__P(perc_lf_settings, 0)}</stringProp>
+              <stringProp name="Argument.value">${__P(perc_lf_settings, 13)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="perc_ul_settings" elementType="Argument">
               <stringProp name="Argument.name">perc_ul_settings</stringProp>
-              <stringProp name="Argument.value">${__P(perc_ul_settings, 0)}</stringProp>
+              <stringProp name="Argument.value">${__P(perc_ul_settings, 14)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="perc_editing_rules" elementType="Argument">
+              <stringProp name="Argument.name">perc_editing_rules</stringProp>
+              <stringProp name="Argument.value">${__P(perc_editing_rules, 20)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="perc_link_fields" elementType="Argument">
+              <stringProp name="Argument.name">perc_link_fields</stringProp>
+              <stringProp name="Argument.value">${__P(perc_link_fields, 20)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="perc_universal_listener" elementType="Argument">
+              <stringProp name="Argument.name">perc_universal_listener</stringProp>
+              <stringProp name="Argument.value">${__P(perc_universal_listener, 20)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
           </collectionProp>
         </Arguments>
         <hashTree/>
-        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="Editing Rules settings" enabled="true">
-          <intProp name="ThroughputController.style">1</intProp>
-          <boolProp name="ThroughputController.perThread">false</boolProp>
-          <intProp name="ThroughputController.maxThroughput">1</intProp>
-          <stringProp name="ThroughputController.percentThroughput">${perc_er_settings}</stringProp>
-        </ThroughputController>
-        <hashTree>
-          <com.blazemeter.jmeter.RandomCSVDataSetConfig guiclass="com.blazemeter.jmeter.RandomCSVDataSetConfigGui" testclass="com.blazemeter.jmeter.RandomCSVDataSetConfig" testname="projects" enabled="true">
-            <stringProp name="filename">datasets/jira/projects.csv</stringProp>
-            <stringProp name="fileEncoding">UTF-8</stringProp>
-            <stringProp name="delimiter">,</stringProp>
-            <stringProp name="variableNames">project_key,project_id</stringProp>
-            <boolProp name="randomOrder">true</boolProp>
-            <boolProp name="ignoreFirstLine">false</boolProp>
-            <boolProp name="rewindOnTheEndOfList">true</boolProp>
-            <boolProp name="independentListPerThread">false</boolProp>
-          </com.blazemeter.jmeter.RandomCSVDataSetConfig>
-          <hashTree/>
-          <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="editing_rules_update_and_get_settings" enabled="true">
-            <boolProp name="TransactionController.includeTimers">false</boolProp>
-            <boolProp name="TransactionController.parent">true</boolProp>
-          </TransactionController>
-          <hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /rest/editingrules/1.0/settings/&lt;project_key&gt;" enabled="true">
-              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-                <collectionProp name="Arguments.arguments">
-                  <elementProp name="" elementType="HTTPArgument">
-                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                    <stringProp name="Argument.value">{&quot;settings&quot;:[{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10000&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
-{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10334&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
-{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10000&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
-{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10001&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]},&#xd;
-{&quot;ruleType&quot;:&quot;restriction&quot;,&quot;issueType&quot;:&quot;10332&quot;,&quot;statuses&quot;:[&quot;all&quot;],&quot;roles&quot;:[&quot;all&quot;],&quot;fields&quot;:[&quot;description&quot;]}]}</stringProp>
-                    <stringProp name="Argument.metadata">=</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </elementProp>
-              <stringProp name="HTTPSampler.domain"></stringProp>
-              <stringProp name="HTTPSampler.port"></stringProp>
-              <stringProp name="HTTPSampler.protocol"></stringProp>
-              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-              <stringProp name="HTTPSampler.path">${application.postfix}/rest/editingrules/1.0/settings/${project_key}</stringProp>
-              <stringProp name="HTTPSampler.method">PUT</stringProp>
-              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-              <stringProp name="HTTPSampler.response_timeout"></stringProp>
-            </HTTPSamplerProxy>
-            <hashTree>
-              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-                <collectionProp name="HeaderManager.headers">
-                  <elementProp name="Accept-Language" elementType="Header">
-                    <stringProp name="Header.name">Accept-Language</stringProp>
-                    <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
-                  </elementProp>
-                  <elementProp name="X-Requested-With" elementType="Header">
-                    <stringProp name="Header.name">X-Requested-With</stringProp>
-                    <stringProp name="Header.value">XMLHttpRequest</stringProp>
-                  </elementProp>
-                  <elementProp name="Content-Type" elementType="Header">
-                    <stringProp name="Header.name">Content-Type</stringProp>
-                    <stringProp name="Header.value">application/json</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept-Encoding" elementType="Header">
-                    <stringProp name="Header.name">Accept-Encoding</stringProp>
-                    <stringProp name="Header.value">gzip, deflate</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept" elementType="Header">
-                    <stringProp name="Header.name">Accept</stringProp>
-                    <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
-                  </elementProp>
-                  <elementProp name="Authorization" elementType="Header">
-                    <stringProp name="Header.name">Authorization</stringProp>
-                    <stringProp name="Header.value">Basic YWRtaW46YWRtaW4=</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </HeaderManager>
-              <hashTree/>
-            </hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /rest/editingrules/1.0/settings/&lt;project_key&gt;" enabled="true">
-              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
-                <collectionProp name="Arguments.arguments"/>
-              </elementProp>
-              <stringProp name="HTTPSampler.domain"></stringProp>
-              <stringProp name="HTTPSampler.port"></stringProp>
-              <stringProp name="HTTPSampler.protocol"></stringProp>
-              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-              <stringProp name="HTTPSampler.path">${application.postfix}/rest/editingrules/1.0/settings/${project_key}</stringProp>
-              <stringProp name="HTTPSampler.method">GET</stringProp>
-              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-              <stringProp name="HTTPSampler.response_timeout"></stringProp>
-            </HTTPSamplerProxy>
-            <hashTree>
-              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-                <collectionProp name="HeaderManager.headers">
-                  <elementProp name="Accept-Language" elementType="Header">
-                    <stringProp name="Header.name">Accept-Language</stringProp>
-                    <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
-                  </elementProp>
-                  <elementProp name="X-Requested-With" elementType="Header">
-                    <stringProp name="Header.name">X-Requested-With</stringProp>
-                    <stringProp name="Header.value">XMLHttpRequest</stringProp>
-                  </elementProp>
-                  <elementProp name="Content-Type" elementType="Header">
-                    <stringProp name="Header.name">Content-Type</stringProp>
-                    <stringProp name="Header.value">application/json</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept-Encoding" elementType="Header">
-                    <stringProp name="Header.name">Accept-Encoding</stringProp>
-                    <stringProp name="Header.value">gzip, deflate</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept" elementType="Header">
-                    <stringProp name="Header.name">Accept</stringProp>
-                    <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </HeaderManager>
-              <hashTree/>
-            </hashTree>
-          </hashTree>
-        </hashTree>
-        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="Link Fileds settings" enabled="true">
-          <intProp name="ThroughputController.style">1</intProp>
-          <boolProp name="ThroughputController.perThread">false</boolProp>
-          <intProp name="ThroughputController.maxThroughput">1</intProp>
-          <stringProp name="ThroughputController.percentThroughput">${perc_lf_settings}</stringProp>
-        </ThroughputController>
-        <hashTree>
-          <com.blazemeter.jmeter.RandomCSVDataSetConfig guiclass="com.blazemeter.jmeter.RandomCSVDataSetConfigGui" testclass="com.blazemeter.jmeter.RandomCSVDataSetConfig" testname="projects" enabled="true">
-            <stringProp name="filename">datasets/jira/projects.csv</stringProp>
-            <stringProp name="fileEncoding">UTF-8</stringProp>
-            <stringProp name="delimiter">,</stringProp>
-            <stringProp name="variableNames">project_key,project_id</stringProp>
-            <boolProp name="randomOrder">true</boolProp>
-            <boolProp name="ignoreFirstLine">false</boolProp>
-            <boolProp name="rewindOnTheEndOfList">true</boolProp>
-            <boolProp name="independentListPerThread">false</boolProp>
-          </com.blazemeter.jmeter.RandomCSVDataSetConfig>
-          <hashTree/>
-          <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="link_fields_update_and_get_settings" enabled="true">
-            <boolProp name="TransactionController.includeTimers">false</boolProp>
-            <boolProp name="TransactionController.parent">true</boolProp>
-          </TransactionController>
-          <hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /rest/linkfields/1.0/settings/&lt;project_key&gt;" enabled="true">
-              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-                <collectionProp name="Arguments.arguments">
-                  <elementProp name="" elementType="HTTPArgument">
-                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                    <stringProp name="Argument.value">{&quot;settings&quot;:[{&quot;issueType&quot;:&quot;10000&quot;,&quot;fields&quot;:[&quot;creator&quot;],&quot;displayNames&quot;:true,&quot;removeSummary&quot;:true}]}</stringProp>
-                    <stringProp name="Argument.metadata">=</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </elementProp>
-              <stringProp name="HTTPSampler.domain"></stringProp>
-              <stringProp name="HTTPSampler.port"></stringProp>
-              <stringProp name="HTTPSampler.protocol"></stringProp>
-              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-              <stringProp name="HTTPSampler.path">${application.postfix}/rest/linkfields/1.0/settings/${project_key}</stringProp>
-              <stringProp name="HTTPSampler.method">PUT</stringProp>
-              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-              <stringProp name="HTTPSampler.response_timeout"></stringProp>
-            </HTTPSamplerProxy>
-            <hashTree>
-              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-                <collectionProp name="HeaderManager.headers">
-                  <elementProp name="Accept-Language" elementType="Header">
-                    <stringProp name="Header.name">Accept-Language</stringProp>
-                    <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
-                  </elementProp>
-                  <elementProp name="X-Requested-With" elementType="Header">
-                    <stringProp name="Header.name">X-Requested-With</stringProp>
-                    <stringProp name="Header.value">XMLHttpRequest</stringProp>
-                  </elementProp>
-                  <elementProp name="Content-Type" elementType="Header">
-                    <stringProp name="Header.name">Content-Type</stringProp>
-                    <stringProp name="Header.value">application/json</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept-Encoding" elementType="Header">
-                    <stringProp name="Header.name">Accept-Encoding</stringProp>
-                    <stringProp name="Header.value">gzip, deflate</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept" elementType="Header">
-                    <stringProp name="Header.name">Accept</stringProp>
-                    <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
-                  </elementProp>
-                  <elementProp name="Authorization" elementType="Header">
-                    <stringProp name="Header.name">Authorization</stringProp>
-                    <stringProp name="Header.value">Basic YWRtaW46YWRtaW4=</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </HeaderManager>
-              <hashTree/>
-            </hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /rest/linkfields/1.0/settings/&lt;project_key&gt;" enabled="true">
-              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
-                <collectionProp name="Arguments.arguments"/>
-              </elementProp>
-              <stringProp name="HTTPSampler.domain"></stringProp>
-              <stringProp name="HTTPSampler.port"></stringProp>
-              <stringProp name="HTTPSampler.protocol"></stringProp>
-              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-              <stringProp name="HTTPSampler.path">${application.postfix}/rest/linkfields/1.0/settings/${project_key}</stringProp>
-              <stringProp name="HTTPSampler.method">GET</stringProp>
-              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-              <stringProp name="HTTPSampler.response_timeout"></stringProp>
-            </HTTPSamplerProxy>
-            <hashTree>
-              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-                <collectionProp name="HeaderManager.headers">
-                  <elementProp name="Accept-Language" elementType="Header">
-                    <stringProp name="Header.name">Accept-Language</stringProp>
-                    <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
-                  </elementProp>
-                  <elementProp name="X-Requested-With" elementType="Header">
-                    <stringProp name="Header.name">X-Requested-With</stringProp>
-                    <stringProp name="Header.value">XMLHttpRequest</stringProp>
-                  </elementProp>
-                  <elementProp name="Content-Type" elementType="Header">
-                    <stringProp name="Header.name">Content-Type</stringProp>
-                    <stringProp name="Header.value">application/json</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept-Encoding" elementType="Header">
-                    <stringProp name="Header.name">Accept-Encoding</stringProp>
-                    <stringProp name="Header.value">gzip, deflate</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept" elementType="Header">
-                    <stringProp name="Header.name">Accept</stringProp>
-                    <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </HeaderManager>
-              <hashTree/>
-            </hashTree>
-          </hashTree>
-        </hashTree>
-        <ThroughputController guiclass="ThroughputControllerGui" testclass="ThroughputController" testname="UniListener settings" enabled="true">
-          <intProp name="ThroughputController.style">1</intProp>
-          <boolProp name="ThroughputController.perThread">false</boolProp>
-          <intProp name="ThroughputController.maxThroughput">1</intProp>
-          <stringProp name="ThroughputController.percentThroughput">${perc_ul_settings}</stringProp>
-        </ThroughputController>
-        <hashTree>
-          <com.blazemeter.jmeter.RandomCSVDataSetConfig guiclass="com.blazemeter.jmeter.RandomCSVDataSetConfigGui" testclass="com.blazemeter.jmeter.RandomCSVDataSetConfig" testname="projects" enabled="true">
-            <stringProp name="filename">datasets/jira/projects.csv</stringProp>
-            <stringProp name="fileEncoding">UTF-8</stringProp>
-            <stringProp name="delimiter">,</stringProp>
-            <stringProp name="variableNames">project_key,project_id</stringProp>
-            <boolProp name="randomOrder">true</boolProp>
-            <boolProp name="ignoreFirstLine">false</boolProp>
-            <boolProp name="rewindOnTheEndOfList">true</boolProp>
-            <boolProp name="independentListPerThread">false</boolProp>
-          </com.blazemeter.jmeter.RandomCSVDataSetConfig>
-          <hashTree/>
-          <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="unilistener_update_and_get_settings" enabled="true">
-            <boolProp name="TransactionController.includeTimers">false</boolProp>
-            <boolProp name="TransactionController.parent">true</boolProp>
-          </TransactionController>
-          <hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /rest/unilistener/1.0/settings/&lt;project_key&gt;" enabled="true">
-              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-                <collectionProp name="Arguments.arguments">
-                  <elementProp name="" elementType="HTTPArgument">
-                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                    <stringProp name="Argument.value">{&quot;settings&quot;:[{&quot;issuetype&quot;:&quot;all&quot;,&quot;performactionsaspl&quot;:false,&quot;dispatchevent&quot;:false,&quot;conditions&quot;:[{&quot;conditiontype&quot;:&quot;IssueEvent&quot;,&quot;parameter1&quot;:&quot;1&quot;,&quot;parameter2&quot;:&quot;N/A&quot;,&quot;parameter3&quot;:&quot;N/A&quot;,&quot;parameter4&quot;:&quot;N/A&quot;,&quot;logic&quot;:&quot;N/A&quot;,&quot;isOn&quot;:false}],&quot;actions&quot;:[{&quot;actiontype&quot;:&quot;CommentIssue&quot;,&quot;parameter1&quot;:&quot;Issue created&quot;,&quot;parameter2&quot;:&quot;N/A&quot;,&quot;parameter3&quot;:&quot;N/A&quot;,&quot;parameter4&quot;:&quot;N/A&quot;,&quot;parameter5&quot;:&quot;N/A&quot;,&quot;parameter6&quot;:&quot;N/A&quot;}]}]}</stringProp>
-                    <stringProp name="Argument.metadata">=</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </elementProp>
-              <stringProp name="HTTPSampler.domain"></stringProp>
-              <stringProp name="HTTPSampler.port"></stringProp>
-              <stringProp name="HTTPSampler.protocol"></stringProp>
-              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-              <stringProp name="HTTPSampler.path">${application.postfix}/rest/unilistener/1.0/settings/${project_key}</stringProp>
-              <stringProp name="HTTPSampler.method">PUT</stringProp>
-              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-              <stringProp name="HTTPSampler.response_timeout"></stringProp>
-            </HTTPSamplerProxy>
-            <hashTree>
-              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-                <collectionProp name="HeaderManager.headers">
-                  <elementProp name="Accept-Language" elementType="Header">
-                    <stringProp name="Header.name">Accept-Language</stringProp>
-                    <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
-                  </elementProp>
-                  <elementProp name="X-Requested-With" elementType="Header">
-                    <stringProp name="Header.name">X-Requested-With</stringProp>
-                    <stringProp name="Header.value">XMLHttpRequest</stringProp>
-                  </elementProp>
-                  <elementProp name="Content-Type" elementType="Header">
-                    <stringProp name="Header.name">Content-Type</stringProp>
-                    <stringProp name="Header.value">application/json</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept-Encoding" elementType="Header">
-                    <stringProp name="Header.name">Accept-Encoding</stringProp>
-                    <stringProp name="Header.value">gzip, deflate</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept" elementType="Header">
-                    <stringProp name="Header.name">Accept</stringProp>
-                    <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
-                  </elementProp>
-                  <elementProp name="" elementType="Header">
-                    <stringProp name="Header.name">Authorization</stringProp>
-                    <stringProp name="Header.value">Basic YWRtaW46YWRtaW4=</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </HeaderManager>
-              <hashTree/>
-            </hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /rest/unilistener/1.0/settings/&lt;project_key&gt;" enabled="true">
-              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
-                <collectionProp name="Arguments.arguments"/>
-              </elementProp>
-              <stringProp name="HTTPSampler.domain"></stringProp>
-              <stringProp name="HTTPSampler.port"></stringProp>
-              <stringProp name="HTTPSampler.protocol"></stringProp>
-              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
-              <stringProp name="HTTPSampler.path">${application.postfix}/rest/unilistener/1.0/settings/${project_key}</stringProp>
-              <stringProp name="HTTPSampler.method">GET</stringProp>
-              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-              <stringProp name="HTTPSampler.response_timeout"></stringProp>
-            </HTTPSamplerProxy>
-            <hashTree>
-              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-                <collectionProp name="HeaderManager.headers">
-                  <elementProp name="Accept-Language" elementType="Header">
-                    <stringProp name="Header.name">Accept-Language</stringProp>
-                    <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
-                  </elementProp>
-                  <elementProp name="X-Requested-With" elementType="Header">
-                    <stringProp name="Header.name">X-Requested-With</stringProp>
-                    <stringProp name="Header.value">XMLHttpRequest</stringProp>
-                  </elementProp>
-                  <elementProp name="Content-Type" elementType="Header">
-                    <stringProp name="Header.name">Content-Type</stringProp>
-                    <stringProp name="Header.value">application/json</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept-Encoding" elementType="Header">
-                    <stringProp name="Header.name">Accept-Encoding</stringProp>
-                    <stringProp name="Header.value">gzip, deflate</stringProp>
-                  </elementProp>
-                  <elementProp name="Accept" elementType="Header">
-                    <stringProp name="Header.name">Accept</stringProp>
-                    <stringProp name="Header.value">application/json, text/javascript, */*; q=0.01</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </HeaderManager>
-              <hashTree/>
-            </hashTree>
-          </hashTree>
-        </hashTree>
         <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="jmeter_login_and_view_dashboard" enabled="true">
           <boolProp name="TransactionController.includeTimers">false</boolProp>
           <boolProp name="TransactionController.parent">true</boolProp>
