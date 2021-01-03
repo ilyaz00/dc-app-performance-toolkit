@@ -167,11 +167,10 @@
             <stringProp name="script">import org.apache.commons.io.FileUtils;
 
 // TODO Rework hard-codded path
-int projects = FileUtils.readLines(new File(&quot;/home/ubuntu/dc-app-performance-toolkit/app/datasets/jira/projects.csv&quot;)).size();
+int projects = FileUtils.readLines(new File(&quot;datasets/jira/projects.csv&quot;)).size();
 int page_size = 25;
 int pages = (projects % page_size == 0) ? projects / page_size : projects / page_size + 1;
-props.put(&quot;project_pages&quot;, String.valueOf(pages));
-props.put(&quot;projects_num&quot;, String.valueOf(projects));</stringProp>
+props.put(&quot;project_pages&quot;, String.valueOf(pages));</stringProp>
           </BeanShellPreProcessor>
           <hashTree/>
         </hashTree>
@@ -182,8 +181,8 @@ props.put(&quot;projects_num&quot;, String.valueOf(projects));</stringProp>
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <stringProp name="LoopController.loops">1</stringProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">${__P(projects_num, 0)}</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">${__P(projects_num, 0)}/100</stringProp>
+        <stringProp name="ThreadGroup.num_threads">245</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">3</stringProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
