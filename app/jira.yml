@@ -4,7 +4,7 @@ settings:
   aggregator: consolidator
   verbose: false
   env:
-    application_hostname: jira-loadb-tqlm9klabvm6-1386819569.us-west-2.elb.amazonaws.com    # Jira DC hostname without protocol and port e.g. test-jira.atlassian.com or localhost
+    application_hostname: jira-loadb-lioasbjr42wo-294669203.us-west-2.elb.amazonaws.com    # Jira DC hostname without protocol and port e.g. test-jira.atlassian.com or localhost
     application_protocol: http      # http or https
     application_port: 80            # 80, 443, 8080, 2990, etc
     secure: True                    # Set False to allow insecure connections, e.g. when using self-signed SSL certificate
@@ -21,17 +21,19 @@ settings:
     LANGUAGE: en_US.utf8
     allow_analytics: Yes            # Allow sending basic run analytics to Atlassian. These analytics help us to understand how the tool is being used and help us to continue to invest in this tooling. For more details please see our README.
     # Action percentage for Jmeter and Locust load executors
+    editing_rules: 10
+    link_fields: 10
     create_issue: 4
-    search_jql: 13
-    view_issue: 43
+    search_jql: 8
+    view_issue: 33
     view_project_summary: 4
-    view_dashboard: 12
+    view_dashboard: 8
     edit_issue: 4
     add_comment: 2
     browse_projects: 4
     view_scrum_board: 3
     view_kanban_board: 3
-    view_backlog: 6
+    view_backlog: 5
     browse_boards: 2
     standalone_extension: 0 # By default disabled
     # Custom dataset section.
@@ -84,6 +86,8 @@ scenarios:
       perc_view_backlog: ${view_backlog}
       perc_browse_boards: ${browse_boards}
       perc_standalone_extension: ${standalone_extension}
+      perc_editing_rules: ${editing_rules}
+      perc_link_fields: ${link_fields}
 modules:
   consolidator:
     rtimes-len: 0 # CONFSRVDEV-7631 reduce sampling
