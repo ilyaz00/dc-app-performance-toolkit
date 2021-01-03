@@ -629,12 +629,12 @@ props.put(&quot;projects_num&quot;, String.valueOf(projects));</stringProp>
             </elementProp>
             <elementProp name="perc_editing_rules" elementType="Argument">
               <stringProp name="Argument.name">perc_editing_rules</stringProp>
-              <stringProp name="Argument.value">${__P(perc_editing_rules, 20)}</stringProp>
+              <stringProp name="Argument.value">${__P(perc_editing_rules, 0)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="perc_link_fields" elementType="Argument">
               <stringProp name="Argument.name">perc_link_fields</stringProp>
-              <stringProp name="Argument.value">${__P(perc_link_fields, 20)}</stringProp>
+              <stringProp name="Argument.value">${__P(perc_link_fields, 0)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
           </collectionProp>
