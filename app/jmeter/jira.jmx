@@ -167,7 +167,7 @@
             <stringProp name="script">import org.apache.commons.io.FileUtils;
 
 // TODO Rework hard-codded path
-int projects = FileUtils.readLines(new File(&quot;${__BeanShell(import org.apache.jmeter.services.FileServer; FileServer.getFileServer().getBaseDir();)}/datasets/jira/projects.csv&quot;)).size();
+int projects = FileUtils.readLines(new File(&quot;datasets/jira/projects.csv&quot;)).size();
 int page_size = 25;
 int pages = (projects % page_size == 0) ? projects / page_size : projects / page_size + 1;
 props.put(&quot;project_pages&quot;, String.valueOf(pages));
